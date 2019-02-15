@@ -30,32 +30,6 @@ from official.utils.misc import model_helpers
 
 LEARNING_RATE = 1e-4
 
-def parse_function_resnet(example_proto):
-    features = {'image/encoded': tf.FixedLenFeature([], tf.string),
-            'image/format': tf.FixedLenFeature([], tf.string),
-            'image/label': tf.FixedLenFeature([], tf.int64)}
-    features = tf.parse_single_example(example_proto, features)
-    # You can do more image distortion here for training data
-    img = tf.image.decode_jpeg(features['image/encoded'])
-    img = tf.image.resize_images(img, [128, 128])
-    img = tf.reshape(img, shape=(128, 128, 3))
-    r, g, b = tf.split(img, num_or_size_splits=3, axis=-1)
-    img = tf.concat([b, g, r], axis=-1)
-    img = tf.cast(img, dtype=tf.float32)
-    img = tf.subtract(img, 127.5)
-    img = tf.multiply(img,  0.0078125)
-    img = tf.image.random_flip_left_right(img)
-    label = tf.cast(features['image/label'], tf.int64)
-    return img, label
-
-def dataset_input_fn(params):
-    dataset = tf.data.TFRecordDataset(params['filenames'])
-    dataset = dataset.map(parse_function_resnet)
-    dataset = dataset.shuffle(params['shuffle_buff'])
-    dataset = dataset.repeat()
-    dataset = dataset.batch(params['batch'])
-    dataset = dataset.prefetch(8*params['batch'])
-    return dataset
 
 def create_model(data_format):
   """Model to recognize digits in the MNIST dataset.
@@ -85,6 +59,9 @@ def create_model(data_format):
   # (a subclass of tf.keras.Model) makes for a compact description.
   return tf.keras.Sequential(
       [
+          l.Reshape(
+              target_shape=input_shape,
+              input_shape=(28 * 28,)),
           l.Conv2D(
               32,
               5,
@@ -112,9 +89,9 @@ def define_mnist_flags():
   flags.adopt_module_key_flags(flags_core)
   flags_core.set_defaults(data_dir='/data',
                           model_dir='/training_logs',
-                          batch_size=64,
-                          train_epochs=100,
-                          max_steps=20000)
+                          batch_size=100,
+                          train_epochs=1,
+                          max_steps=2000)
 
 
 def model_fn(features, labels, mode, params):
@@ -201,18 +178,13 @@ def run_mnist(flags_obj):
   if data_format is None:
     data_format = ('channels_first'
                    if tf.test.is_built_with_cuda() else 'channels_last')
-  params={
-	  'data_format': data_format,
-	  'multi_gpu': multi_gpu,
-	  'shuffle_buff': 1000,
-	  'batch': 32,
-	  'mode': tf.estimator.ModeKeys.TRAIN,
-	  'filenames': flags_obj.data_dir + "image_train_00000-of-00001.tfrecord"}
-#'filenames': "/home/newhome/junjie/dataset/vggface2/record_10class/image_train_00000-of-00001.tfrecord"}
   mnist_classifier = tf.estimator.Estimator(
       model_fn=model_function,
       model_dir=flags_obj.model_dir,
-      params=params)
+      params={
+          'data_format': data_format,
+          'multi_gpu': multi_gpu
+      })
 
   # Set up training and evaluation input functions.
   def train_input_fn():
@@ -239,14 +211,13 @@ def run_mnist(flags_obj):
       batch_size=flags_obj.batch_size)
 
   # Train and evaluate model.
-  #train_spec = tf.estimator.TrainSpec(input_fn=train_input_fn, max_steps=flags_obj.max_steps)
-  #eval_spec = tf.estimator.EvalSpec(input_fn=eval_input_fn)
-  #tf.estimator.train_and_evaluate(mnist_classifier, train_spec, eval_spec)
-  mnist_classifier.train(input_fn=lambda: dataset_input_fn(params), max_steps=10000)
+  train_spec = tf.estimator.TrainSpec(input_fn=train_input_fn, max_steps=flags_obj.max_steps)
+  eval_spec = tf.estimator.EvalSpec(input_fn=eval_input_fn)
+  tf.estimator.train_and_evaluate(mnist_classifier, train_spec, eval_spec)
 
   # Export the model
   if flags_obj.export_dir is not None:
-    image = tf.placeholder(tf.float32, [None, 128, 128])
+    image = tf.placeholder(tf.float32, [None, 28, 28])
     input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn({
         'image': image,
     })
