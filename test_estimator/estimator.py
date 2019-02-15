@@ -9,7 +9,7 @@ import tempfile
 import time
 import tensorflow as tf
 
-import nets.factory as nets_factory
+import test_estimator.nets.factory as nets_factory
 
 slim = tf.contrib.slim
 
