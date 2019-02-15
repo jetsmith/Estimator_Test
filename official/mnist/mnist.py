@@ -209,10 +209,18 @@ def run_mnist(flags_obj):
 	  'mode': tf.estimator.ModeKeys.TRAIN,
 	  'filenames': flags_obj.data_dir + "image_train_00000-of-00001.tfrecord"}
 #'filenames': "/home/newhome/junjie/dataset/vggface2/record_10class/image_train_00000-of-00001.tfrecord"}
+
+  config = tf.estimator.RunConfig(
+    keep_checkpoint_max=5,
+    log_step_count_steps=20,
+    save_checkpoints_steps=50,
+    session_config=tf.ConfigProto(allow_soft_placement=True, log_device_placement=True))
+ 
   mnist_classifier = tf.estimator.Estimator(
       model_fn=model_function,
       model_dir=flags_obj.model_dir,
-      params=params)
+      params=params,
+      config=config)
 
   # Set up training and evaluation input functions.
   def train_input_fn():
