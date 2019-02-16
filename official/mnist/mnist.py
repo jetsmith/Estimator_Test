@@ -206,8 +206,8 @@ def run_mnist(flags_obj):
 	  'multi_gpu': multi_gpu,
 	  'shuffle_buff': 1000,
 	  'batch': 32,
-	  'mode': tf.estimator.ModeKeys.TRAIN,
-	  'filenames': flags_obj.data_dir + "image_train_00000-of-00001.tfrecord"}
+	  'filenames': flags_obj.data_dir + "/image_train_00000-of-00001.tfrecord"}
+#'mode': tf.estimator.ModeKeys.TRAIN,
 #'filenames': "/home/newhome/junjie/dataset/vggface2/record_10class/image_train_00000-of-00001.tfrecord"}
 
   config = tf.estimator.RunConfig(
