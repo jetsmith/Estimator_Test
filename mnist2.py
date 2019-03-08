@@ -40,10 +40,10 @@ import argparse
 #args = parse_args()
 
 tf.app.flags.DEFINE_string(
-    'data_dir', '/data',
+    'data_dir', '/data/cls',
     'Directory where checkpoints and event logs are written to.')
 tf.app.flags.DEFINE_string(
-    'model_dir', '/data/train_dir',
+    'model_dir', '/data/cls/train_dir',
     'gpu ids to train the network.'
     )
 FLAGS = tf.app.flags.FLAGS
