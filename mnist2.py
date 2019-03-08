@@ -146,6 +146,7 @@ def model_fn(features, labels, mode, params):
         })
   if mode == tf.estimator.ModeKeys.TRAIN:
     optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
+    optimizer = tf.train.SyncReplicasOptimizer(optimizer, replicas_to_aggregate=2)
 
     # If we are running multi-GPU, we need to wrap the optimizer.
     optimizer = tf.contrib.estimator.TowerOptimizer(optimizer)
