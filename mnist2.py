@@ -20,25 +20,6 @@ from __future__ import print_function
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 import argparse
 
-#def parse_args():
-#  """
-#  Parse input arguments
-#  """
-#  parser = argparse.ArgumentParser(description='test Estimator for classification')
-#  parser.add_argument('--data_dir', dest='dataset directory',
-#                      help='optional config file',
-#                      default="/home/newhome/junjie/dataset/vggface2/record_10class/", type=str)
-#  parser.add_argument('--model_dir', dest='path where ckpt is saved',
-#                      help='initialize with pretrained model weights',
-#                      default='/data/object_detection/test_cls',
-#                      type=str)
-#  parser.add_argument('--imdb', dest='imdb_name',
-#                      help='dataset to train on',
-#                      default='voc_2007_trainval+voc_2012_trainval', type=str)
-#  args = parser.parse_args()
-#  return args
-#args = parse_args()
-
 tf.app.flags.DEFINE_string(
     'data_dir', '/data/cls',
     'Directory where checkpoints and event logs are written to.')
@@ -146,7 +127,7 @@ def model_fn(features, labels, mode, params):
         })
   if mode == tf.estimator.ModeKeys.TRAIN:
     optimizer = tf.train.AdamOptimizer(learning_rate=params['learning_rate'])
-    optimizer = tf.train.SyncReplicasOptimizer(optimizer, replicas_to_aggregate=2)
+    #optimizer = tf.train.SyncReplicasOptimizer(optimizer, replicas_to_aggregate=2)
 
     # If we are running multi-GPU, we need to wrap the optimizer.
     optimizer = tf.contrib.estimator.TowerOptimizer(optimizer)
